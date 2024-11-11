@@ -4,6 +4,8 @@ from pytubefix import YouTube
 from pytubefix.cli import on_progress
 from transformers import pipeline
 import os
+import re
+from youtube_transcript_api import YouTubeTranscriptApi
 
 # Set page configuration
 st.set_page_config(
@@ -21,34 +23,62 @@ def load_models():
 
 model, summarizer = load_models()
 
-def get_audio(url):
+def extract_video_id(url):
+    """Extract video ID from YouTube URL."""
+    match = re.search(r"v=([A-Za-z0-9_-]+)", url)
+    if match:
+        return match.group(1)
+    return None
+
+def get_transcript_from_api(video_id):
+    """Get transcript using YouTube Transcript API."""
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = ""
+        for segment in transcript:
+            transcript_text += segment["text"] + " "
+        return transcript_text
+    except Exception as e:
+        st.error(f"Error getting transcript from YouTube API: {str(e)}")
+        return None
+
+def get_audio_and_transcribe(url):
+    """Get audio and transcribe using pytubefix and whisper."""
     try:
         yt = YouTube(url, on_progress_callback=on_progress)
         audio_stream = yt.streams.get_audio_only()
         out_file = audio_stream.download(mp3=True)
-        return out_file
+        
+        with st.spinner('Transcribing audio...'):
+            result = model.transcribe(out_file)
+            os.remove(out_file)
+            return result['text']
     except Exception as e:
-        st.error(f"Error downloading audio: {str(e)}")
+        st.warning(f"pytubefix method failed: {str(e)}")
         return None
 
 def get_text(url):
-    try:
-        audio_file = get_audio(url)
-        if audio_file:
-            with st.spinner('Transcribing audio...'):
-                result = model.transcribe(audio_file)
-                # Clean up the downloaded file
-                os.remove(audio_file)
-                return result['text']
-        return None
-    except Exception as e:
-        st.error(f"Error transcribing audio: {str(e)}")
-        return None
+    """Get text using either pytubefix+whisper or YouTube Transcript API."""
+    # First try pytubefix + whisper method
+    transcript = get_audio_and_transcribe(url)
+    
+    # If pytubefix method fails, try YouTube Transcript API
+    if transcript is None:
+        st.info("Trying alternative method using YouTube Transcript API...")
+        video_id = extract_video_id(url)
+        if video_id:
+            transcript = get_transcript_from_api(video_id)
+        else:
+            st.error("Invalid YouTube URL")
+            return None
+    
+    return transcript
 
 def get_summary(text):
     try:
         if text:
             with st.spinner('Generating summary...'):
+                # Split text into chunks of 1000 characters
                 chunks = [text[i:i + 1000] for i in range(0, len(text), 1000)]
                 summaries = []
                 for chunk in chunks:
@@ -64,9 +94,9 @@ def get_summary(text):
 st.title("YouTube Video Transcription & Summarization")
 st.markdown("Enter the link of any YouTube video to get its transcription and summary.")
 
-st.warning("""
-    Note: This app uses the pytubefix library to fetch audio from YouTube URLs. 
-    If YouTube is blocking requests, you might experience errors.
+st.info("""
+    This app will first try to download and transcribe the audio directly. 
+    If that fails, it will automatically try to fetch the transcript from YouTube's API.
 """)
 
 # Create tabs
