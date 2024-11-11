@@ -21,8 +21,8 @@ A Streamlit web application that transcribes YouTube videos and generates summar
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/youtube-transcriber.git
-cd youtube-transcriber
+git clone https://github.com/rajeshai/Youtube-Transcription.git
+cd Youtube-Transcription
 ```
 
 2. Create and activate a virtual environment (recommended):
