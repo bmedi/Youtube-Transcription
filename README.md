@@ -3,7 +3,6 @@
 ![Python](https://img.shields.io/badge/Python-3.7%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.24%2B-red)
 ![OpenAI Whisper](https://img.shields.io/badge/OpenAI-Whisper-yellow)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 A Streamlit web application that transcribes YouTube videos and generates summaries using OpenAI's Whisper model and Hugging Face's transformers. The app provides dual methods for transcription: direct audio processing with Whisper and `youtube-transcript-api`.
 
