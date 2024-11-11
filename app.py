@@ -95,8 +95,9 @@ st.title("YouTube Video Transcription & Summarization")
 st.markdown("Enter the link of any YouTube video to get its transcription and summary.")
 
 st.info("""
-    This app will first try to download and transcribe the audio directly. 
-    If that fails, it will automatically try to fetch the transcript from YouTube's API.
+    This app will first try to download and transcribe the audio using OpenAI's Whisper Model. 
+    If that fails, it will automatically try to fetch the transcript from YouTube Video if Subtitles are available.
+    Otherwise, it will raise an error.
 """)
 
 # Create tabs
