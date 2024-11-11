@@ -3,3 +3,4 @@ pytubefix
 transformers
 httpx==0.24.1
 streamlit
+youtube-transcript-api
